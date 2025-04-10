@@ -1,0 +1,38 @@
+#include "src/MergeManager.h"
+#include <chrono>
+#include <iostream>
+
+constexpr auto OR = Tree::OR;
+constexpr auto AND = Tree::AND;
+constexpr auto NOT = Tree::NOT;
+constexpr auto AL = Tree::AL;
+constexpr auto AM = Tree::AM;
+using routine = std::vector<MergeManager::command>;
+using command = MergeManager::command;
+using cutVec = std::vector<std::vector<Cut::cutOriginPair>>;
+
+int main() {
+
+${merge_manager}
+
+  auto start = std::chrono::high_resolution_clock::now();
+  manager.baseline(false);
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  std::cout << "baseline," << duration.count() << "," << Tree::checkCount << std::endl;
+
+  start = std::chrono::high_resolution_clock::now();
+  manager.attDef(false, false);
+  stop = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  std::cout << "attack/defense," << duration.count() << "," << Tree::checkCount << std::endl;
+
+  start = std::chrono::high_resolution_clock::now();
+  manager.attDef(false, true);
+  stop = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  std::cout << "wall/siege," << duration.count() << "," << Tree::checkCount << std::endl;
+
+  return 0;
+}
+
