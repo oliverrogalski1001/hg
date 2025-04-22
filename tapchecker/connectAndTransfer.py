@@ -4,22 +4,45 @@ from os import curdir
 import pymysql
 from z3 import *
 
+
 def connect():
-    return pymysql.connect(host="hostIP",user="username",password="pwd",database="ifttt" )
+    return pymysql.connect(host="localhost", user="root", password="", database="hg")
+
 
 # ['ruleId', 'ruleName', 'conditionIds', 'actionIds','dayofweeks','starttime','endtime']
-def getAllRules(db, userId=''):
+def getAllRules(db, sceneId="", userId=""):
     cursor = db.cursor()
-    if userId == '':
-        cursor.execute("SELECT * FROM t_rule")
-        rule = cursor.fetchall()
-    else:
+    if userId != "" and sceneId != "":
+        try:
+            cursor.execute(
+                "SELECT * FROM t_rule WHERE userId = '"
+                + str(userId)
+                + "' AND sceneId = '"
+                + str(sceneId)
+                + "'"
+            )
+            rule = cursor.fetchall()
+        except:
+            rule = []
+    elif userId != "":
         try:
             cursor.execute("SELECT * FROM t_rule WHERE userId = '" + str(userId) + "'")
             rule = cursor.fetchall()
         except:
             rule = []
+    elif sceneId != "":
+        try:
+            cursor.execute(
+                "SELECT * FROM t_rule WHERE sceneId = '" + str(sceneId) + "'"
+            )
+            rule = cursor.fetchall()
+        except:
+            rule = []
+    else:
+        cursor.execute("SELECT * FROM t_rule")
+        rule = cursor.fetchall()
     return rule
+
 
 # def getAllRules(db,userId,sceneId):
 #     cursor = db.cursor()
@@ -32,6 +55,7 @@ def getAllRules(db, userId=''):
 #         except:
 #             pass
 #     return rule
+
 
 # ['conditionIds', 'deviceId', 'attribute', 'compareType', 'standardValue']
 def getCondition(Cid, db):
@@ -76,8 +100,17 @@ def getActbyDev(Did, db):
 
 def getActbyAttr(a1, a2, a3, db):
     cursor = db.cursor()
-    cursor.execute("SELECT actionId FROM t_action WHERE deviceId = '" + str(a1) + "'" \
-                   + " and attribute = '" + str(a2) + "'" + "and newValue = '" + str(a3) + "'")
+    cursor.execute(
+        "SELECT actionId FROM t_action WHERE deviceId = '"
+        + str(a1)
+        + "'"
+        + " and attribute = '"
+        + str(a2)
+        + "'"
+        + "and newValue = '"
+        + str(a3)
+        + "'"
+    )
     act = cursor.fetchall()
     return act
 
@@ -90,7 +123,8 @@ def getRule(Rid, db):
         rl = True
     return rl
 
-# deviceId deviceUuid deviceName categoryId readOnlyId readOnlyAttributes commonAttributes 
+
+# deviceId deviceUuid deviceName categoryId readOnlyId readOnlyAttributes commonAttributes
 def getDevice(Did, db):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM t_device WHERE deviceId = '" + str(Did) + "'")
@@ -103,8 +137,17 @@ def getDevice(Did, db):
 # ['actionId', 'deviceId', 'attribute', 'newValue']
 def getDevEffect(Did, attribute, newValue, db):
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM t_entity WHERE deviceId = '" + str(Did) + "'" \
-                   + "and attribute = '" + str(attribute) + "'" + "and newValue = '" + str(newValue) + "'")
+    cursor.execute(
+        "SELECT * FROM t_entity WHERE deviceId = '"
+        + str(Did)
+        + "'"
+        + "and attribute = '"
+        + str(attribute)
+        + "'"
+        + "and newValue = '"
+        + str(newValue)
+        + "'"
+    )
     effect = cursor.fetchone()
     return effect
 
@@ -121,8 +164,16 @@ def getAllSpec(db):
 def getSpecAction(spec, db):
     actId = []
     cursor = db.cursor()
-    cursor.execute("SELECT actionId FROM t_action WHERE deviceId = '" + str(spec[0]) + "'" \
-                   + "and attribute = '" + str(spec[1]) + "' and newValue = '" + str(spec[2]) + "'")
+    cursor.execute(
+        "SELECT actionId FROM t_action WHERE deviceId = '"
+        + str(spec[0])
+        + "'"
+        + "and attribute = '"
+        + str(spec[1])
+        + "' and newValue = '"
+        + str(spec[2])
+        + "'"
+    )
     act = cursor.fetchall()
     for a in act:
         actId.append(str(a[0]))
@@ -132,8 +183,16 @@ def getSpecAction(spec, db):
 def getSpecCon(spec, db):
     conId = []
     cursor = db.cursor()
-    cursor.execute("SELECT conditionId FROM t_condition WHERE deviceId = '" + str(spec[0]) + "'" \
-                   + "and attribute = '" + str(spec[1]) + "' and standardValue = '" + str(spec[2]) + "'")
+    cursor.execute(
+        "SELECT conditionId FROM t_condition WHERE deviceId = '"
+        + str(spec[0])
+        + "'"
+        + "and attribute = '"
+        + str(spec[1])
+        + "' and standardValue = '"
+        + str(spec[2])
+        + "'"
+    )
     con = cursor.fetchall()
     for c in con:
         conId.append(str(c[0]))
@@ -143,12 +202,22 @@ def getSpecCon(spec, db):
 def getNotCon(spec, db):
     conId = []
     cursor = db.cursor()
-    cursor.execute("SELECT actionId FROM t_action WHERE deviceId = '" + str(spec[0]) + "'" \
-                   + "and attribute = '" + str(spec[1]) + "' and newValue <> '" + str(spec[2]) + "'")
+    cursor.execute(
+        "SELECT actionId FROM t_action WHERE deviceId = '"
+        + str(spec[0])
+        + "'"
+        + "and attribute = '"
+        + str(spec[1])
+        + "' and newValue <> '"
+        + str(spec[2])
+        + "'"
+    )
     actId = cursor.fetchall()
-    if str(actId) != '()':
+    if str(actId) != "()":
         for aid in actId:
-            cursor.execute("SELECT conditionId FROM t_rule WHERE actionIds = '" + str(aid) + "'")
+            cursor.execute(
+                "SELECT conditionId FROM t_rule WHERE actionIds = '" + str(aid) + "'"
+            )
             cid = cursor.fetchall()
             for c in cid:
                 conId.append(str(c[0]))
@@ -159,7 +228,7 @@ def getNotCon(spec, db):
 # ['conditionIds', 'deviceId', 'attribute', 'compareType', 'standardValue']
 def conditionToZ3(condition):
     if not condition == None and not condition == True:
-        x = Int((str(condition[1]) + ":" + str(condition[2])).encode('utf-8'))
+        x = Int((str(condition[1]) + ":" + str(condition[2])).encode("utf-8"))
         # print(condition[4])
         # 1是等于
         if condition[3] == 1:
@@ -191,7 +260,7 @@ def conditionToZ3(condition):
 def actionToZ3(action):
     if action == None:
         return True
-    x = Int((str(action[1]) + ":" + action[2]).encode('utf-8'))
+    x = Int((str(action[1]) + ":" + action[2]).encode("utf-8"))
     act = x == action[3]
     return act
 
@@ -217,44 +286,45 @@ def getPolicy(db):
     specs = cursor.fetchall()
     policies = []
     for spec in specs:
-        x = Int((str(spec[0]) + ":" + str(spec[1])).encode('utf-8')) == spec[2]
-        y = Int((str(spec[3]) + ":" + str(spec[4])).encode('utf-8')) == spec[5]
+        x = Int((str(spec[0]) + ":" + str(spec[1])).encode("utf-8")) == spec[2]
+        y = Int((str(spec[3]) + ":" + str(spec[4])).encode("utf-8")) == spec[5]
         if spec[6] == 0:
-            policies.append(Not(And(x,y)))
+            policies.append(Not(And(x, y)))
         else:
-            policies.append(Implies(x,y))
+            policies.append(Implies(x, y))
     # print(policies)
     return policies
+
 
 def getEffect(db):
     # cursor = db.cursor()
     # cursor.execute("SELECT * FROM t_entity")
     # entities = cursor.fetchall()
     effects = []
-    x1 = Int('79:设备状态'.encode('utf-8')) == 3
-    y1 = Int('88:温度'.encode('utf-8')) > 26
-    effects.append(Implies(x1,y1))
-    x2 = Int('79:设备状态'.encode('utf-8')) == 4
-    y2 = Int('88:温度'.encode('utf-8')) < 26
-    effects.append(Implies(x2,y2))
-    x3 = Int('84:设备状态'.encode('utf-8')) == 1
-    effects.append(Implies(x3,y1))
+    x1 = Int("79:设备状态".encode("utf-8")) == 3
+    y1 = Int("88:温度".encode("utf-8")) > 26
+    effects.append(Implies(x1, y1))
+    x2 = Int("79:设备状态".encode("utf-8")) == 4
+    y2 = Int("88:温度".encode("utf-8")) < 26
+    effects.append(Implies(x2, y2))
+    x3 = Int("84:设备状态".encode("utf-8")) == 1
+    effects.append(Implies(x3, y1))
 
-    x1 = Int('99:设备状态'.encode('utf-8')) == 3
-    y1 = Int('105:温度'.encode('utf-8')) > 26
-    effects.append(Implies(x1,y1))
-    x2 = Int('99:设备状态'.encode('utf-8')) == 4
-    y2 = Int('105:温度'.encode('utf-8')) < 26
-    effects.append(Implies(x2,y2))
-    x3 = Int('103:设备状态'.encode('utf-8')) == 1
-    effects.append(Implies(x3,y1))
+    x1 = Int("99:设备状态".encode("utf-8")) == 3
+    y1 = Int("105:温度".encode("utf-8")) > 26
+    effects.append(Implies(x1, y1))
+    x2 = Int("99:设备状态".encode("utf-8")) == 4
+    y2 = Int("105:温度".encode("utf-8")) < 26
+    effects.append(Implies(x2, y2))
+    x3 = Int("103:设备状态".encode("utf-8")) == 1
+    effects.append(Implies(x3, y1))
 
-    x1 = Int('116:设备状态'.encode('utf-8')) == 3
-    y1 = Int('119:温度'.encode('utf-8')) > 26
-    effects.append(Implies(x1,y1))
-    x2 = Int('116:设备状态'.encode('utf-8')) == 4
-    y2 = Int('119:温度'.encode('utf-8')) < 26
-    effects.append(Implies(x2,y2))
-    x3 = Int('117:设备状态'.encode('utf-8')) == 1
-    effects.append(Implies(x3,y1))
+    x1 = Int("116:设备状态".encode("utf-8")) == 3
+    y1 = Int("119:温度".encode("utf-8")) > 26
+    effects.append(Implies(x1, y1))
+    x2 = Int("116:设备状态".encode("utf-8")) == 4
+    y2 = Int("119:温度".encode("utf-8")) < 26
+    effects.append(Implies(x2, y2))
+    x3 = Int("117:设备状态".encode("utf-8")) == 1
+    effects.append(Implies(x3, y1))
     return effects

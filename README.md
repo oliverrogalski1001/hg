@@ -1,10 +1,10 @@
 # hg
 
-This is the core algorithm used by HomeGuard. The program entry is the mainCheck.py file.
-========================================================
+# This is the core algorithm used by HomeGuard. The program entry is the main.py file
+
 The main package that the program depends on is Z3, which can be installed using the code 'pip install z3-solver'.
 
-The experiment rules data in the Data folder is exported from the mysql database. You can import into your own local mysql database and configure your database information in the connectAndTransfer.py file. This allows the code to connect to your database for user rules reading.
+The experiment rules data in the Data folder is exported from the mysql database. You can import into your own local mysql database using the `setup.sql` script and configure your database information in the connectAndTransfer.py file. This allows the code to connect to your database for user rules reading.
 The operation of the mysql database can install dependencies through the code 'pip install pymysql'
 
 ========================================================
