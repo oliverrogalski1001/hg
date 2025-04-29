@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from z3 import *
 import pymysql
-import connectAndTransfer as cat
+from tapchecker import connectAndTransfer as cat
 import time
 import ast
 from functools import reduce
@@ -79,11 +79,11 @@ def f(appletsList, triggerdic, actiondic, linkTable, policy):
         actions = [actiondic[num] for num in appletsList[i][3].split(",")]
         iAction = reduce(And, actions)
         if (
-            solver.check(And(iTrigger, iAction)) == sat
-            and pSolver.check(And(iTrigger, iAction)) == unsat
+            solver.check(And(True, iAction)) == sat
+            and pSolver.check(And(True, iAction)) == unsat
         ):
             # res = res if res != [] else [1]
-            res.append((appletsList[i][1]))
+            res.append(f"{appletsList[i][0]},self-conflict")
             continue
 
         for j in range(length):
@@ -94,20 +94,23 @@ def f(appletsList, triggerdic, actiondic, linkTable, policy):
             actions = [actiondic[num] for num in appletsList[j][3].split(",")]
             jAction = reduce(And, actions)
             if (
-                (solver.check(And(iTrigger, jTrigger)) == sat or linkTable[i][j])
-                and solver.check(And(iAction, jAction)) == sat
+                solver.check(And(iAction, jAction)) == sat
                 and pSolver.check(And(iAction, jAction)) == unsat
             ):
                 # res = res if res != [] else [1]
-                res.append((appletsList[i][1] + " ,and, " + appletsList[j][1]))
+                res.append(
+                    f"{appletsList[i][0]},{appletsList[j][0]},second-pairwise-conflict"
+                )
 
-            if linkTable[i][j] == False:
-                continue
+            # if linkTable[i][j] == False:
+            #     continue
             if (
-                solver.check(And(iTrigger, jAction)) == sat
-                and pSolver.check(And(iTrigger, jAction)) == unsat
+                solver.check(And(True, jAction)) == sat
+                and pSolver.check(And(True, jAction)) == unsat
             ):
                 # res = res if res != [] else [1]
-                res.append((appletsList[i][1] + " ,and, " + appletsList[j][1]))
+                res.append(
+                    f"{appletsList[i][0]},{appletsList[j][0]},first-pairwise-conflict"
+                )
 
     return res
