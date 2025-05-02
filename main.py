@@ -1,9 +1,17 @@
+import sys
 from tapchecker import mainCheck
 from tapchecker import connectAndTransfer as cat
 
-trials = 3
-for _ in range(trials):
-    print(f"scene 1: {mainCheck.check(cat.connect(), "", 1)["times"][0]}s")
+if len(sys.argv) != 2:
+    print("usage: python3 main.py [test_name]")
+    print("test_name = {hg, hg_adjusted}")
 
-for _ in range(trials):
-    print(f"scene 3: {mainCheck.check(cat.connect(), "", 3)["times"][2]}s")
+if sys.argv[1] == "hg":
+    res = mainCheck.check(cat.connect(), sceneId=3)
+elif sys.argv[1] == "hg_adjusted":
+    res = mainCheck.check(cat.connect(), sceneId=3, adjusted=True)
+else:
+    print("unknown test_name")
+
+print(f"took {res["times"]} seconds")
+print("\n".join(res["conflicts"]))

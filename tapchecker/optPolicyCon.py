@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from z3 import *
 import pymysql
-import connectAndTransfer as cat
+from tapchecker import connectAndTransfer as cat
 import time
 import ast
 from functools import reduce
@@ -79,11 +79,65 @@ def f(appletsList, triggerdic, actiondic, linkTable, policy):
         actions = [actiondic[num] for num in appletsList[i][3].split(",")]
         iAction = reduce(And, actions)
         if (
+            solver.check(And(True, iAction)) == sat
+            and pSolver.check(And(True, iAction)) == unsat
+        ):
+            # res = res if res != [] else [1]
+            res.append(f"{appletsList[i][0]},self-conflict")
+            continue
+
+        for j in range(length):
+            if i == j:
+                continue
+            triggers = [triggerdic[num] for num in appletsList[j][2].split(",")]
+            jTrigger = reduce(And, triggers)
+            actions = [actiondic[num] for num in appletsList[j][3].split(",")]
+            jAction = reduce(And, actions)
+            if (
+                solver.check(And(iAction, jAction)) == sat
+                and pSolver.check(And(iAction, jAction)) == unsat
+            ):
+                # res = res if res != [] else [1]
+                res.append(
+                    f"{appletsList[i][0]},{appletsList[j][0]},second-pairwise-conflict"
+                )
+
+            # if linkTable[i][j] == False:
+            #     continue
+            if (
+                solver.check(And(True, jAction)) == sat
+                and pSolver.check(And(True, jAction)) == unsat
+            ):
+                # res = res if res != [] else [1]
+                res.append(
+                    f"{appletsList[i][0]},{appletsList[j][0]},first-pairwise-conflict"
+                )
+
+    return res
+
+
+def f_adjusted(appletsList, triggerdic, actiondic, linkTable, policy):
+    s = time.time()
+    solver = Solver()
+    pSolver = Solver()
+    for p in policy:
+        pSolver.append(p)
+    # solver.set(unsat_core=True)
+    # solver.assert_and_track(policy,'p')
+    # print(pSolver,appletsList,linkTable)
+    res = []
+    length = len(appletsList)
+    for i in range(length):
+        triggers = [triggerdic[num] for num in appletsList[i][2].split(",")]
+        iTrigger = reduce(And, triggers)
+        actions = [actiondic[num] for num in appletsList[i][3].split(",")]
+        iAction = reduce(And, actions)
+        if (
             solver.check(And(iTrigger, iAction)) == sat
             and pSolver.check(And(iTrigger, iAction)) == unsat
         ):
             # res = res if res != [] else [1]
-            res.append((appletsList[i][1]))
+            res.append(f"{appletsList[i][0]}")
             continue
 
         for j in range(length):
@@ -99,7 +153,7 @@ def f(appletsList, triggerdic, actiondic, linkTable, policy):
                 and pSolver.check(And(iAction, jAction)) == unsat
             ):
                 # res = res if res != [] else [1]
-                res.append((appletsList[i][1] + " ,and, " + appletsList[j][1]))
+                res.append(f"{appletsList[i][0]}, {appletsList[j][0]}")
 
             if linkTable[i][j] == False:
                 continue
@@ -108,6 +162,6 @@ def f(appletsList, triggerdic, actiondic, linkTable, policy):
                 and pSolver.check(And(iTrigger, jAction)) == unsat
             ):
                 # res = res if res != [] else [1]
-                res.append((appletsList[i][1] + " ,and, " + appletsList[j][1]))
+                res.append(f"{appletsList[i][0]}, {appletsList[j][0]}")
 
     return res
