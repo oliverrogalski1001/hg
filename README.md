@@ -8,7 +8,8 @@ The original README is left below for reference. This repo modifies TapChecker's
 
 These are left unchanged from the original implementation:
 - The SMT solver Z3 (install via `pip install z3-solver`)
-- `mysql`, used for storing rule datasets (install via `pip install pymysql`)
+- `pymysql` used to connect to mySQL (install via `pip install pymysql`)
+- `mysql` used for storing rule datasets (install and run `setup.sql` to load tables)
 
 ## Usage
 
@@ -16,9 +17,9 @@ Run `main.py` to see a list of conflicts taken from a filtered series of routine
 
 `tapchecker/mainCheck.py` contains the top level solver, modified to report all conflicts (rule violations) for TapChecker's 'Policy Conflict' checker only. The relevant code is in `tapchecker/optPolicyCon.py`.
 
-### Advanced Details
+### Evaluation against Knox
 
-Currently, Knox only runs routines from a given scene, which corresponds to a specific room in TapChecker's original experiments. Within a scene, all trigger conditions are ignored to maximize concurrency and conflict (rule violation) potential.
+Adjustments for evaluation against Knox can be checked out from the `eval-adjustment` branch. Currently, Knox only runs routines from a given scene, which corresponds to a specific room in TapChecker's original experiments. Within a scene, all trigger conditions are ignored to maximize concurrency and conflict (rule violation) potential.
 
 Modifications to the routine dataset are in the `knox_rule` table, which can be managed at `knox_table.sql`. Note this this pulls from `Data/experiment rules/t_rule.txt`, which has routines and triggers, but not device ID's. For checking those (to verify conflicts, for example), consult/launch a subquery against `t_action.txt`.
 
