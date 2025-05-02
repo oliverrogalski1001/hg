@@ -13,7 +13,7 @@ from tapchecker import optTACon
 import random
 
 
-def check(db, userId="", sceneId=0, adjusted=False):
+def check(db, userId="", sceneId=1, adjusted=False):
     solver = Solver()
     apps = [[] for _ in range(3)]
     appletsList = list(cat.getAllRules(db, str(sceneId), userId))
