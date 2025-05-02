@@ -13,10 +13,8 @@ from tapchecker import optTACon
 import random
 
 
-def check(db, userId="", sceneId=0):
+def check(db, userId="", sceneId=0, adjusted=False):
     solver = Solver()
-    res = [[] for _ in range(7)]
-    tm = [0.0 for _ in range(7)]
     apps = [[] for _ in range(3)]
     appletsList = list(cat.getAllRules(db, str(sceneId), userId))
     print(f"# rules = {len(appletsList)}")
@@ -27,7 +25,6 @@ def check(db, userId="", sceneId=0):
     appletsListLen = len(appletsList)
     for app in appletsList:
         apps[app[-1] - 1].append(app)
-    start0 = time.time()
     appletsList = apps[sceneId]
     triggerdic = {}
     actiondic = {}
@@ -76,62 +73,13 @@ def check(db, userId="", sceneId=0):
                     linkTable[i][j] = True
     solver.pop()
 
-    # 检验
-    # res = []
-    # start = time.time()
-    # r = optTACon.f(appletsList, triggerdic, actiondic, linkTable)
-    # res[1] += r
-    # time1 = time.time()
-    # tm[1] += time1-start
-    # r = optAlwaysTrue.f(appletsList, triggerdic, actiondic)
-    # res[2] += r
-    # time2 = time.time()
-    # tm[2] += time2-time1
-    # r = optRedundancy.f(appletsList, triggerdic, actiondic)
-    # res[3] += r
-    # time3 = time.time()
-    # tm[3] += time3-time2
-    # r = optSelfCon.f(appletsList, triggerdic, actiondic)
-    # res[4] += r
-    # time4 = time.time()
-    # tm[5] += time4-time3
-    # r = optActCon.f(appletsList, triggerdic, actiondic)
-    # res[5] += r
-    # time5 = time.time()
-    # tm[5] += time5-time4
     start = time.time()
-    res = optPolicyCon.f(appletsList, triggerdic, actiondic, linkTable, policy)
-    tm[sceneId] += time.time() - start
-    # res[6] += r
-    # time6 = time.time()
-    # tm[6] += time6-time5
-    # tm[0] += time6-start0
+    if adjusted:
+        res = optPolicyCon.f_adjusted(
+            appletsList, triggerdic, actiondic, linkTable, policy
+        )
+    else:
+        res = optPolicyCon.f(appletsList, triggerdic, actiondic, linkTable, policy)
+    elapsed = time.time() - start
 
-    return {"times": tm, "conflicts": res}
-
-    # return {
-    #     "自冲突":res[4],
-    #     "自冲突时间":str(time4-time3)[:5],
-    #     "多值冲突":res[5],
-    #     "多值冲突时间":str(time5-time4)[:5],
-    #     "冗余冲突":res[3],
-    #     "冗余冲突时间":str(time3-time2)[:5],
-    #     "并发冲突":res[6],
-    #     "并发冲突时间":str(time6-time5)[:5],
-    #     "覆盖冲突":res[1],
-    #     "覆盖冲突时间":str(time1-start)[:5],
-    #     "无条件触发":res[2],
-    #     "无条件触发时间":str(time2-time1)[:5],
-    #     "冲突":1,
-    #     "冲突总时间":str(time6-start)[:5]
-    # }
-
-    # for i in range(len(res)):
-    #     res[i] = [1] + res[i] if res[i] != [] else [0]
-    # return len(res[1])-1,len(res[2])-1,len(res[3])-1,\
-    #     len(res[4])-1,len(res[5])-1,len(res[6])-1,float(str(tm[0])[:6]),\
-    #     len(res[1])+len(res[2])+len(res[3])+len(res[4])+len(res[5])+len(res[6])-6,\
-    #     appletsListLen
-
-
-# cat.connect()
+    return {"times": elapsed, "conflicts": res}
