@@ -14,7 +14,7 @@ These are left unchanged from the original implementation:
 
 ## Usage
 
-Run `python3 main.py hg` to see a list of conflicts taken from a filtered series of routines ('TAP rules' by TapChecker terminology) against all given rules.
+Run `python3 main.py hg_timing` to get the runtime of the tapchecker algorithm for sceneId 1 and 3.
 
 `tapchecker/mainCheck.py` contains the top level solver, modified to report all conflicts (rule violations) for TapChecker's 'Policy Conflict' checker only. The relevant code is in `tapchecker/optPolicyCon.py`.
 
