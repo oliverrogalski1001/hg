@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from z3 import *
-import connectAndTransfer as cat
+from tapchecker import connectAndTransfer as cat
 import pymysql
 import time
 from functools import reduce
@@ -62,4 +62,3 @@ def f(appletsList, triggerdic, actiondic):
     # print(res)
     # res = [0] if res == [] else res
     return res
-
