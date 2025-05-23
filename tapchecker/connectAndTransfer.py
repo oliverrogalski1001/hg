@@ -1,12 +1,20 @@
 # -*- coding:utf-8 -*-
 from functools import reduce
 from os import curdir
+import os
 import pymysql
 from z3 import *
 
 
 def connect():
-    return pymysql.connect(host="localhost", user="root", password="", database="hg")
+    # Defaults match a local MySQL with the upstream settings; override with HG_DB_* variables.
+    return pymysql.connect(
+        host=os.environ.get("HG_DB_HOST", "localhost"),
+        port=int(os.environ.get("HG_DB_PORT", "3306")),
+        user=os.environ.get("HG_DB_USER", "root"),
+        password=os.environ.get("HG_DB_PASSWORD", ""),
+        database=os.environ.get("HG_DB_NAME", "hg"),
+    )
 
 
 # ['ruleId', 'ruleName', 'conditionIds', 'actionIds','dayofweeks','starttime','endtime']
@@ -34,6 +42,71 @@ def getAllRules(db, sceneId="", userId=""):
         try:
             cursor.execute(
                 "SELECT * FROM t_rule WHERE sceneId = '" + str(sceneId) + "'"
+            )
+            rule = cursor.fetchall()
+        except:
+            rule = []
+    else:
+        cursor.execute("SELECT * FROM t_rule")
+        rule = cursor.fetchall()
+    return rule
+
+
+def getRandomRules(db, sceneId=3, numRules=5, seed=None):
+    cursor = db.cursor()
+    try:
+        cursor.execute(f"""
+            SELECT t_rule.*
+            FROM t_rule
+            INNER JOIN t_action ON t_rule.actionIds = t_action.actionId
+            WHERE t_rule.sceneId = {sceneId}
+            AND (t_action.deviceId, t_action.attribute)  IN (
+                SELECT DISTINCT t_action.deviceId, t_action.attribute
+                FROM t_action
+                INNER JOIN t_rule ON t_rule.actionIds = t_action.actionId
+                WHERE t_action.actionId IN (SELECT actionIds FROM t_rule WHERE ruleId IN (224,2217,1761,1170,1600,1103,660,789,824,1022,1087,1270))
+            )
+            ORDER BY RAND({'' if seed is None else int(seed)})
+            LIMIT {numRules}
+        """)
+        rule = cursor.fetchall()
+    except:
+        rule = []
+    return rule
+
+
+def getSomeRules(db, sceneId="", userId="", ruleIds=[]):
+    cursor = db.cursor()
+    if userId != "" and sceneId != "":
+        try:
+            cursor.execute(
+                "SELECT * FROM t_rule WHERE userId = '"
+                + str(userId)
+                + "' AND sceneId = '"
+                + str(sceneId)
+                + f"' AND ruleId IN ({','.join([str(rule) for rule in ruleIds])})"
+            )
+            rule = cursor.fetchall()
+        except:
+            rule = []
+    elif userId != "":
+        try:
+            cursor.execute(
+                "SELECT * FROM t_rule WHERE userId = '"
+                + str(userId)
+                + "'"
+                + f" AND ruleId IN ({','.join([str(rule) for rule in ruleIds])})"
+            )
+            rule = cursor.fetchall()
+        except:
+            rule = []
+    elif sceneId != "":
+        try:
+            cursor.execute(
+                "SELECT * FROM t_rule WHERE sceneId = '"
+                + str(sceneId)
+                + "'"
+                + f" AND ruleId IN ({','.join([str(rule) for rule in ruleIds])})"
             )
             rule = cursor.fetchall()
         except:
@@ -292,7 +365,6 @@ def getPolicy(db):
             policies.append(Not(And(x, y)))
         else:
             policies.append(Implies(x, y))
-    # print(policies)
     return policies
 
 

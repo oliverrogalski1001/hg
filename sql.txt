@@ -1,0 +1,17 @@
+SELECT t_rule.ruleId, t_action.actionId, t_action.deviceId, t_action.attribute, t_action.newValue
+FROM t_action
+INNER JOIN t_rule ON t_rule.actionIds = t_action.actionId
+WHERE t_action.actionId IN (SELECT actionIds FROM t_rule WHERE ruleId IN (224, 2217, 1761, 548, 1600, 1103));
+
+SELECT t_rule.*
+FROM t_rule
+INNER JOIN t_action ON t_rule.actionIds = t_action.actionId
+WHERE t_rule.sceneId = 3
+AND (t_action.deviceId, t_action.attribute) IN (
+  SELECT DISTINCT t_action.deviceId, t_action.attribute
+  FROM t_action
+  INNER JOIN t_rule ON t_rule.actionIds = t_action.actionId
+  WHERE t_action.actionId IN (SELECT actionIds FROM t_rule WHERE ruleId IN (224,2217,1761,1170,1600,1103,660,789,824,1022,1087,1270))
+)
+ORDER BY RAND()
+LIMIT 5;

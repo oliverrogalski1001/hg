@@ -13,19 +13,18 @@ from tapchecker import optTACon
 import random
 
 
-def check(db, userId="", sceneId=1, adjusted=False):
+def getAppletList(db, userId="", sceneId=1, ruleIds=[]):
+    if len(ruleIds) == 0:
+        return list(cat.getAllRules(db, str(sceneId), userId))
+    return list(cat.getSomeRules(db, str(sceneId), userId, ruleIds))
+
+
+def check(db, appletsList, checker=optPolicyCon.f, additionalPolicy=[]):
     solver = Solver()
-    apps = [[] for _ in range(3)]
-    appletsList = list(cat.getAllRules(db, str(sceneId), userId))
-    print(f"# rules = {len(appletsList)}")
+    # print(f"# rules = {len(appletsList)}")
     # appletsList = []
     # random sample
     # appletsList = random.choices(appletsListAll, k=500)
-
-    appletsListLen = len(appletsList)
-    for app in appletsList:
-        apps[app[-1] - 1].append(app)
-    appletsList = apps[sceneId]
     triggerdic = {}
     actiondic = {}
     length = len(appletsList)
@@ -46,6 +45,8 @@ def check(db, userId="", sceneId=1, adjusted=False):
                 actiondic[num] = exp
     # 添加系统策略
     policy = cat.getPolicy(db)
+    for additional_policy in additionalPolicy:
+        policy.append(additional_policy)
     # 添加环境影响
     # 建立链接表
     solver.push()
@@ -74,12 +75,7 @@ def check(db, userId="", sceneId=1, adjusted=False):
     solver.pop()
 
     start = time.time()
-    if adjusted:
-        res = optPolicyCon.f_adjusted(
-            appletsList, triggerdic, actiondic, linkTable, policy
-        )
-    else:
-        res = optPolicyCon.f(appletsList, triggerdic, actiondic, linkTable, policy)
+    res = checker(appletsList, triggerdic, actiondic, linkTable, policy)
     elapsed = time.time() - start
 
     return {"times": elapsed, "conflicts": res}
